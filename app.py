@@ -1,4 +1,4 @@
-from flask import Flask, request, abort
+from flask import Flask, request
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
@@ -7,14 +7,20 @@ from db import init_db, save_user, get_user
 import os
 import re
 
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "LINE Baby Bot is running"
+
+@app.route("/daily_push")
+def daily_push():
+    return "ok" 
+
 from datetime import date
 from db import DB_PATH
 import sqlite3
 
-@app.route("/daily_push")
-def daily_push():
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
 
     cur.execute("""
         SELECT line_user_id, stage, due_date, birth_date
@@ -50,7 +56,6 @@ def daily_push():
 
     return "ok"
 
-app = Flask(__name__)
 
 # ====== LINE 金鑰（用你原本的）======
 LINE_CHANNEL_ACCESS_TOKEN = "DPZQZHEyYtLj8CJL0gMDJmvW3fhJg1qPTgBZCkHkcSlPuMaD1Wlcc6kNNlSop6sCXdTZvwEarSAS427KL4yCPGhQSfZ0HJdXpavOjY3ASsYaifjWqYMYapb7Q73CLrylu133S4FXYosVaPNTDWMkyAdB04t89/1O/w1cDnyilFU="
