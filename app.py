@@ -1,11 +1,4 @@
 from flask import Flask, request
-from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from datetime import datetime
-from db import init_db, save_user, get_user
-import os
-import re
 
 app = Flask(__name__)
 
@@ -16,6 +9,14 @@ def home():
 @app.route("/daily_push")
 def daily_push():
     return "ok" 
+
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from datetime import datetime
+from db import init_db, save_user, get_user
+import os
+import re
 
 from datetime import date
 from db import DB_PATH
