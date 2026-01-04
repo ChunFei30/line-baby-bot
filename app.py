@@ -7,6 +7,49 @@ from db import init_db, save_user, get_user
 import os
 import re
 
+from datetime import date
+from db import DB_PATH
+import sqlite3
+
+@app.route("/daily_push")
+def daily_push():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT line_user_id, stage, due_date, birth_date
+        FROM users
+    """)
+    users = cur.fetchall()
+    conn.close()
+
+    today = date.today()
+
+    for user_id, stage, due_date, birth_date in users:
+        try:
+            if stage == "born" and birth_date:
+                d = date.fromisoformat(birth_date)
+                days = (today - d).days
+                msg = f"👶 寶寶今天出生滿 {days} 天囉～記得多抱抱寶貝唷! 💛"
+
+            elif stage == "pregnant" and due_date:
+                d = date.fromisoformat(due_date)
+                days = (d - today).days
+                msg = f"🤰 距離預產期還有 {days} 天，爸比媽咪加加油～寶貝正在努力長大唷!🌱"
+
+            else:
+                continue
+
+            line_bot_api.push_message(
+                user_id,
+                TextSendMessage(text=msg)
+            )
+
+        except Exception as e:
+            print("push error:", e)
+
+    return "ok"
+
 app = Flask(__name__)
 
 # ====== LINE 金鑰（用你原本的）======
