@@ -1,0 +1,13 @@
+name: Daily LINE Push
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 台灣時間 09:00
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call daily push API
+        run: |
+          curl https://line-baby-bot-k14x.onrender.com/daily_push
