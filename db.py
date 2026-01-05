@@ -1,28 +1,29 @@
 import sqlite3
 
-DB_PATH = "babybot.db"
+DB_PATH = "baby.db"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
+    # 使用者資料（寶寶狀態）
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
         line_user_id TEXT PRIMARY KEY,
-        stage TEXT,
-        due_date TEXT,
+        stage TEXT,          -- born / pregnant
         birth_date TEXT,
-        baby_gender TEXT,
-        created_at TEXT DEFAULT (datetime('now'))
+        due_date TEXT
     )
     """)
 
+    # 紀錄表（喝奶、睡眠、尿布）
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS user_state (
-        line_user_id TEXT PRIMARY KEY,
-        step TEXT,
-        temp_stage TEXT,
-        temp_date TEXT
+    CREATE TABLE IF NOT EXISTS records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        line_user_id TEXT,
+        record_type TEXT,    -- feeding / sleep / diaper
+        value TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -30,51 +31,13 @@ def init_db():
     conn.close()
 
 
-def set_state(line_user_id, step, temp_stage=None, temp_date=None):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute("""
-    INSERT INTO user_state(line_user_id, step, temp_stage, temp_date)
-    VALUES(?,?,?,?)
-    ON CONFLICT(line_user_id) DO UPDATE SET
-        step=excluded.step,
-        temp_stage=excluded.temp_stage,
-        temp_date=excluded.temp_date
-    """, (line_user_id, step, temp_stage, temp_date))
-    conn.commit()
-    conn.close()
-
-
-def get_state(line_user_id):
+def save_record(line_user_id, record_type, value):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
-        "SELECT step, temp_stage, temp_date FROM user_state WHERE line_user_id=?",
-        (line_user_id,)
+        "INSERT INTO records (line_user_id, record_type, value) VALUES (?, ?, ?)",
+        (line_user_id, record_type, value)
     )
-    row = cur.fetchone()
-    conn.close()
-    return row
-
-
-def save_user(line_user_id, stage, date_str, gender):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-
-    due_date = date_str if stage == "pregnant" else None
-    birth_date = date_str if stage == "born" else None
-
-    cur.execute("""
-    INSERT INTO users(line_user_id, stage, due_date, birth_date, baby_gender)
-    VALUES(?,?,?,?,?)
-    ON CONFLICT(line_user_id) DO UPDATE SET
-        stage=excluded.stage,
-        due_date=excluded.due_date,
-        birth_date=excluded.birth_date,
-        baby_gender=excluded.baby_gender
-    """, (line_user_id, stage, due_date, birth_date, gender))
-
-    set_state(line_user_id, "done")
     conn.commit()
     conn.close()
 
